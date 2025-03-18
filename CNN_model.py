@@ -6,7 +6,7 @@ class CNN_Model(nn.Module):
         super().__init__()
         self.batch_size = batch_size
         self.input = nn.Linear(1024, 512) #placeholder architecture with linear layers
-        self.output = nn.Linear(512, 7)
+        self.output = nn.Linear(512, 5)
 
     def forward(self, x):
         x = x.reshape(self.batch_size, 1, 1024)
