@@ -9,7 +9,7 @@ class CNN_Model(nn.Module):
         self.output = nn.Linear(512, 5)
 
     def forward(self, x):
-        x = x.reshape(self.batch_size, 1, 1024)
+        x = x.reshape(self.batch_size, 1024)
         x = self.input(x)
         x = self.output(x)
         return x
