@@ -1,11 +1,10 @@
-
+import torch 
 optimiser_func = torch.optim.Adam(params)
 loss_func = torch.nn.L1Loss()
 
 def train(num_epochs, params):
-    
     for epoch in range(num_epochs):
-        epoch_loss = train_one_epoch(epoch, tb_writer)
+        epoch_loss = train_one_epoch(epoch)
         # test_loss = test_one_epoch(epoch, tb_writer)
         # print('Epoch {} test loss: {}'.format(epoch, test_loss))
         print(f"Epoch {epoch+1} completed with Loss: {epoch_loss}")
@@ -13,7 +12,7 @@ def train(num_epochs, params):
     print("Training complete")
 
 
-def train_one_epoch(epoch_index, tb_writer):
+def train_one_epoch(epoch_index):
     running_loss = 0
     last_loss = 0 
 

@@ -1,4 +1,5 @@
 # device = CPU/GPU
+import torch
 def test(model, device, loss_func, test_loader):
     model.eval()
     test_loss = 0
@@ -14,7 +15,7 @@ def test(model, device, loss_func, test_loader):
             output = model(inputs)
             test_loss += loss_func(output, labels).item()
 
-            predicted = output.max(1)
+            predicted = output.argmax(1, dim = 1, keepdim=False)
             correct += (predicted == labels).sum().item()
             total_samples += len(labels)
             total_samples += labels.size(0)
