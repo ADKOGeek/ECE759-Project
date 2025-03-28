@@ -1,6 +1,8 @@
 import h5py
+import torch
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import ToTensor
+import numpy as np
 
 class RadCharDataset(Dataset):
     def __init__(self, data, labels):
@@ -12,8 +14,10 @@ class RadCharDataset(Dataset):
         return (len(self.data))
 
     def __getitem__(self, index):
-        sample = {'data':self.data[index] ,'label':self.labels[index]}
-        sample = self.transform(sample)
+        label = torch.from_numpy(np.asarray(self.labels[index].tolist())[1:6].astype(np.float32))
+        data = torch.from_numpy(np.concatenate((np.real(self.data[index]).astype(np.float32).reshape(1,512), np.imag(self.data[index]).astype(np.float32).reshape(1,512)), axis=0))
+        sample = {'data':data ,'label':label}
+
         return sample
     
 
