@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 
 #training function, calculates all metrics during training
 def train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, device):
@@ -7,9 +8,10 @@ def train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, dev
     train_accuracy = []
     val_accruacy = []
 
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs), desc="Training...", leave=False):
         train_loss, train_acc = train_one_epoch(model, loss_func, optimizer, train_loader, device)
         val_loss, val_acc = test(model, loss_func, val_loader)
+        print(f"\nCompleted epoch {epoch}. train_acc:{train_acc}, val_acc:{val_acc}")
 
         #append metrics to arrays keeping track of them
         train_losses.append(train_loss)
@@ -18,7 +20,7 @@ def train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, dev
         val_accruacy.append(val_acc)
 
     print("Training complete")
-    return [train_losses, val_losses, train_accuracy, val_accruacy]
+    return [train_losses, train_accuracy, val_losses, val_accruacy]
 
 #performs one epoch of prediction + backpropagation
 def train_one_epoch(model, loss_func, optimizer, dataloader, device):
@@ -27,12 +29,12 @@ def train_one_epoch(model, loss_func, optimizer, dataloader, device):
     correct = 0
     total_samples = 0
 
-    for sample in enumerate(dataloader):
+    for i, sample in tqdm(enumerate(dataloader), leave=False):
         signal = sample['data']
         rad_params = sample['rad_params']
         class_label = sample['class_label']
-        class_vec = torch.zeros(5)
-        class_vec[class_label] = 1
+        class_vec = torch.zeros(class_label.shape[0],5) #class labels are ints, so we need to rearrange into a one-hot vector for CE loss computation
+        class_vec[torch.arange(class_vec.shape[0]),class_label] = 1
 
         #make model prediction
         class_pred, rad_pred = model(signal)
@@ -65,13 +67,13 @@ def test(model, loss_func, dataloader):
     total_samples = 0
 
     with torch.no_grad():
-        for sample in dataloader:
+        for i, sample in tqdm(enumerate(dataloader), leave=False):
             #extract data from dataloader
             signal = sample['data']
             rad_params = sample['rad_params']
             class_label = sample['class_label']
-            class_vec = torch.zeros(5)
-            class_vec[class_label] = 1
+            class_vec = torch.zeros(class_label.shape[0],5) #class labels are ints, so we need to rearrange into a one-hot vector for CE loss computation
+            class_vec[torch.arange(class_vec.shape[0]),class_label] = 1
             
             #make prediction on model
             class_pred, rad_pred = model(signal)

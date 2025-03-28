@@ -2,38 +2,52 @@ import torch
 import torch.nn as nn
 
 class CNN_Model(nn.Module):
-    def __init__(self, batch_size):
+    def __init__(self):
         super().__init__()
-        self.batch_size = batch_size
         self.shared = nn.Sequential(
             nn.Linear(1024,512),
+            nn.GELU(),
             nn.Linear(512,256),
+            nn.GELU(),
             nn.Linear(256,128),
-            nn.Linear(128,64)
+            nn.GELU(),
+            nn.Linear(128,64),
+            nn.GELU()
         )
         #self.output = nn.Linear(64,5)
 
 
         self.num_pulses = nn.Sequential(
-            nn.Linear(64,1)
+            nn.Linear(64,32),
+            nn.GELU(),
+            nn.Linear(32,1)
         )
         self.pulse_width = nn.Sequential(
-            nn.Linear(64,1)
+            nn.Linear(64,32),
+            nn.GELU(),
+            nn.Linear(32,1)
         )
         self.time_delay = nn.Sequential(
-            nn.Linear(64,1)
+            nn.Linear(64,32),
+            nn.GELU(),
+            nn.Linear(32,1)
         )
         self.repetition_interval = nn.Sequential(
-            nn.Linear(64,1)
+            nn.Linear(64,32),
+            nn.GELU(),
+            nn.Linear(32,1)
         )
         self.classifier = nn.Sequential(
-            nn.Linear(64,5), #5 classes
+            nn.Linear(64,32),
+            nn.GELU(),
+            nn.Linear(32,5), #5 classes
             nn.Softmax(dim=1)
         )
 
 
     def forward(self, x):
-        x = x.reshape(self.batch_size, 1024)
+        batch_size = x.shape[0]
+        x = x.reshape(batch_size, 1024)
         x = self.shared(x)
         np = self.num_pulses(x)
         pw = self.pulse_width(x)

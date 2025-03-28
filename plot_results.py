@@ -10,7 +10,7 @@ def plot_all(results):
     plt.plot(results[1])
     plt.title("Training Accuracy")
     plt.xlabel("Epoch")
-    plt.ylabel("MTL Loss")
+    plt.ylabel("Accuracy (%)")
     plt.show()
 
     plt.plot(results[2])
@@ -22,17 +22,6 @@ def plot_all(results):
     plt.plot(results[3])
     plt.title("Validation Accuracy")
     plt.xlabel("Epoch")
-    plt.ylabel("MTL Loss")
+    plt.ylabel("Accuracy (%)")
     plt.show()
-
-    plt.plot(results[4])
-    plt.title("Test Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("MTL Loss")
-    plt.show()
-
-    plt.plot(results[5])
-    plt.title("Test Accuracy")
-    plt.xlabel("Epoch")
-    plt.ylabel("MTL Loss")
-    plt.show()
+    

@@ -5,7 +5,7 @@ from train_test import train, test
 from plot_results import plot_all
 import torch
 
-#set device for torch to use
+#set device for torch to use (doesn't actually do anything right now lol)
 device = 'cpu'
 
 #set hyperparameters
@@ -16,12 +16,12 @@ num_epochs = 10
 # load data
 train_loader, val_loader, test_loader = load_data(batch_size=batch_size)
 
-#define loss function and optimizer
-loss_func = MTL_Loss()
-optimizer = torch.optim.Adam(lr=learning_rate)
-
 #load model
 model = CNN_Model()
+
+#define loss function and optimizer
+loss_func = MTL_Loss()
+optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 #train model
 results = train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, device)
@@ -29,7 +29,7 @@ results = train(num_epochs, model, loss_func, optimizer, train_loader, val_loade
 #get model performance on test set
 test_losses, test_acc = test(model, loss_func, test_loader)
 
-#plot results
-results = results.append(test_losses).append(test_acc)
+#display results
 plot_all(results)
+print(f"test loss: {test_losses}, test acc:{test_acc}")
 
