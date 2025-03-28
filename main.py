@@ -1,9 +1,14 @@
+############################################
+# main.py: entry point for training neural network. Run this file to make it work.
+#############################################
+
 from data.load_radchar import load_data
-from CNN_model import CNN_Model
+from placeholder_MLP import Placeholder_MLP
 from mtl_loss import MTL_Loss
 from train_test import train, test
 from plot_results import plot_all
 import torch
+
 
 #set device for torch to use (doesn't actually do anything right now lol)
 device = 'cpu'
@@ -17,7 +22,7 @@ num_epochs = 10
 train_loader, val_loader, test_loader = load_data(batch_size=batch_size)
 
 #load model
-model = CNN_Model()
+model = Placeholder_MLP()
 
 #define loss function and optimizer
 loss_func = MTL_Loss()

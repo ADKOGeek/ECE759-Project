@@ -1,3 +1,7 @@
+#########################################################
+# Helper function for plotting all of the training and validation results
+#########################################################
+
 from matplotlib import pyplot as plt
 
 def plot_all(results):

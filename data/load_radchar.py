@@ -1,3 +1,7 @@
+#########################################################
+# File used to load RadChar dataset into custom Dataset object and then split to train, validation, and test loaders
+#########################################################
+
 import h5py
 import torch
 from torch.utils.data import DataLoader, Dataset

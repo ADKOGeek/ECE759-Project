@@ -1,3 +1,7 @@
+#########################################################
+# Custom multi-task learning loss. Is weighted average of regression and classification tasks' losses.
+#########################################################
+
 import torch.nn as nn
 import torch
 

@@ -1,7 +1,11 @@
+#########################################################
+# Placeholder MLP network for testing data loading, training, testing, plotting, etc.
+#########################################################
+
 import torch
 import torch.nn as nn
 
-class CNN_Model(nn.Module):
+class Placeholder_MLP(nn.Module):
     def __init__(self):
         super().__init__()
         self.shared = nn.Sequential(
