@@ -17,9 +17,9 @@ loss = MTL_Loss()
 model = CNN_Model()
 
 #train model
-train()
+train_losses = train()
 
 #test model
-
+test_losses = test()
 
 #plot results?

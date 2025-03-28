@@ -10,10 +10,10 @@ class MTL_Loss(nn.Module):
         self.cross_loss = nn.CrossEntropyLoss()
 
 
-    def forward(self, prediction, labels):
-        regression_diffs = torch.sum(torch.abs(labels[:,1:] - prediction[:,1:]), dim=0) #L1 loss between predicted radar parameters
-        classification_diffs = torch.unsqueeze(self.cross_loss(labels[:,0], prediction[:,0]), dim=0) #CE loss between classification picks
-        diffs = torch.concat((regression_diffs, classification_diffs), dim=0) #append classification CE loss to regression L1 loss
+    def forward(self, class_pred, rad_pred, class_actual, rad_actual):
+        regression_diffs = torch.sum(torch.abs(rad_pred - rad_actual), dim=0) #L1 loss between predicted radar parameters
+        classification_diffs = torch.unsqueeze(self.cross_loss(class_pred, class_actual), dim=0) #CE loss between classification picks
+        diffs = torch.concat((classification_diffs,regression_diffs), dim=0) #append classification CE loss to regression L1 loss
         weighted = torch.multiply(diffs, self.weights) #apply weights
         total_loss = torch.sum(weighted) #sum losses
 
