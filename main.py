@@ -4,6 +4,7 @@
 
 from data.load_radchar import load_data
 from placeholder_MLP import Placeholder_MLP
+from IQST import IQST
 from mtl_loss import MTL_Loss
 from train_test import train, test
 from plot_results import plot_all
@@ -22,7 +23,7 @@ num_epochs = 10
 train_loader, val_loader, test_loader = load_data(batch_size=batch_size)
 
 #load model
-model = Placeholder_MLP()
+model = IQST()
 
 #define loss function and optimizer
 loss_func = MTL_Loss()
