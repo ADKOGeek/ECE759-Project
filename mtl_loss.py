@@ -8,9 +8,9 @@ import torch
 #Custom loss for multitask learning. Is a weighted sum of regression and classification tasks.
 #Note: Loss function has yet to be tested. It will probably yell and scream until we try actually using it
 class MTL_Loss(nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super().__init__()
-        self.weights = torch.asarray([0.2, 0.2, 0.2, 0.2, 0.2]) #weights set to be equal for now
+        self.weights = torch.asarray([1, 0, 0, 0, 0]).to(device) #weights for task (Class, then regression tasks) default: 0.2 each
         self.cross_loss = nn.CrossEntropyLoss()
 
 

@@ -12,28 +12,32 @@ import torch
 
 
 #set device for torch to use (doesn't actually do anything right now lol)
-device = 'cpu'
+device = (
+    torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+)
+print("Using device", device)
 
 #set hyperparameters
-batch_size = 16
-learning_rate = 0.001
-num_epochs = 10
+batch_size = 64
+learning_rate = 0.0005
+num_epochs = 100
 
 # load data
 train_loader, val_loader, test_loader = load_data(batch_size=batch_size)
 
-#load model
-model = IQST()
+#load model and init weights with LeCun initialization
+model = IQST(device).to(device)
+#model.apply(init_weights)
 
 #define loss function and optimizer
-loss_func = MTL_Loss()
+loss_func = MTL_Loss(device)
 optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 #train model
 results = train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, device)
 
 #get model performance on test set
-test_losses, test_acc = test(model, loss_func, test_loader)
+test_losses, test_acc = test(model, loss_func, test_loader, device)
 
 #display results
 plot_all(results)

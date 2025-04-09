@@ -1,0 +1,7 @@
+ToDo:
+1. Normalize data samples in loading
+2. LeCun initialization for weights
+3. Make IQST actually classify for once
+4. Normalize param labels
+5. Make IQST estimate params properly
+6. Profit
