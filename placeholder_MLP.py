@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 #task head for each estimated parameter
 class TaskHead(nn.Module):
-    def __init__(self, embed_dim, dropout):
+    def __init__(self, embed_dim, dropout=0):
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv1d(in_channels=1,out_channels=embed_dim, kernel_size=3, padding=1, padding_mode='circular'),
@@ -44,7 +44,7 @@ class Placeholder_MLP(nn.Module):
         self.time_delay = TaskHead(64)
         self.repetition_interval = TaskHead(64)
         self.classifier = nn.Sequential(
-            nn.Linear(64,1), #5 classes
+            nn.Linear(64,5), #5 classes
             nn.Softmax(dim=1)
         )
 

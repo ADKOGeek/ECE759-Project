@@ -21,7 +21,7 @@ class RadCharDataset(Dataset):
     def __getitem__(self, index):
         data = torch.transpose(torch.from_numpy(self.data[index, :, :]).squeeze(dim=0), 0, 1)
         param_labels = torch.from_numpy(self.param_labels[index,:])
-        p_type = torch.from_numpy(self.p_type[index,:])
+        p_type = torch.tensor(self.p_type[index])
         sample = {'data':data,'rad_params':param_labels,'class_label':p_type}
 
         return sample
@@ -48,7 +48,7 @@ def load_data(batch_size):
         data_normed = (raw_data - data_mean) / data_std
 
         #extract param data
-        p_type = np.expand_dims(loaded_h5_labels[:,1].astype(np.int32), 1)
+        p_type = loaded_h5_labels[:,1].astype(np.int32)
         num_pulses = loaded_h5_labels[:,2].astype(np.float32)
         pulse_width = loaded_h5_labels[:,3].astype(np.float32)
         time_delay = loaded_h5_labels[:,4].astype(np.float32)

@@ -9,6 +9,7 @@ from mtl_loss import MTL_Loss
 from train_test import train, test
 from plot_results import plot_all
 import torch
+import numpy as np
 
 
 #set device for torch to use (doesn't actually do anything right now lol)
@@ -27,7 +28,8 @@ train_loader, val_loader, test_loader = load_data(batch_size=batch_size)
 
 #load model and init weights with LeCun initialization
 model = IQST(device).to(device)
-#model.apply(init_weights)
+#model = Placeholder_MLP().to(device)
+#model.load_state_dict(torch.load("./IQST.pth"))
 
 #define loss function and optimizer
 loss_func = MTL_Loss(device)
@@ -35,6 +37,9 @@ optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 #train model
 results = train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, device)
+np.save("./results.npy", results)
+
+torch.save(model.state_dict(), "./IQST.pth")
 
 #get model performance on test set
 test_losses, test_acc = test(model, loss_func, test_loader, device)
