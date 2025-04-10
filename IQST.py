@@ -16,6 +16,30 @@ from itertools import repeat
 #         custom_init(m.weight)
 #         m.bias.data.fill_(0.01)
 
+#Helper func to split patches
+# def split_patches(x, num_patches, B, device):
+#     B, H, W = x.shape
+#     new_split = torch.zeros([num_patches, B, int(H*W/num_patches)]).to(device)
+#     patch_size = int(W / num_patches)
+#     for i in range(0,num_patches):
+#         new_split[i,:,:] = torch.flatten(x[:,:,i*patch_size:(i+1)*patch_size], start_dim=1, end_dim=2)
+
+#     return new_split
+
+#Patch splitting module
+class PatchBlock(nn.Module):
+    def __init__(self, num_patches):
+        super().__init__()
+        self.patch_size = int(512 / num_patches)
+        self.patch = nn.Unfold(kernel_size=[2,self.patch_size], stride=self.patch_size)
+
+    def forward(self, x):
+        x = x.unsqueeze(1)
+        x = self.patch(x)
+        x = torch.transpose(torch.transpose(x, dim0=0, dim1=2), dim0=1, dim1=2)
+
+        return x
+
 #Encoder Block
 class EncoderBlock(nn.Module):
     def __init__(self, embed_dim, hidden_dim, num_heads, dropout=0.0):
@@ -39,35 +63,35 @@ class EncoderBlock(nn.Module):
         return x
 
 #Decoder Block
-class DecoderBlock(nn.Module):
-    def __init__(self, embed_dim, hidden_dim, num_heads, dropout=0.0):
-        super().__init__()
-        self.self_attn = nn.MultiheadAttention(embed_dim, num_heads, dropout, batch_first=False)
-        self.cross_attn = nn.MultiheadAttention(embed_dim, num_heads, dropout, batch_first=False)
-        self.layer_norm = nn.LayerNorm(embed_dim)
-        self.ffn = nn.Sequential(
-            nn.LayerNorm(embed_dim),
-            nn.Linear(embed_dim,hidden_dim),
-            nn.GELU(),
-            nn.Dropout(p=dropout),
-            nn.Linear(hidden_dim,embed_dim)
-        )
+# class DecoderBlock(nn.Module):
+#     def __init__(self, embed_dim, hidden_dim, num_heads, dropout=0.0):
+#         super().__init__()
+#         self.self_attn = nn.MultiheadAttention(embed_dim, num_heads, dropout, batch_first=False)
+#         self.cross_attn = nn.MultiheadAttention(embed_dim, num_heads, dropout, batch_first=False)
+#         self.layer_norm = nn.LayerNorm(embed_dim)
+#         self.ffn = nn.Sequential(
+#             nn.LayerNorm(embed_dim),
+#             nn.Linear(embed_dim,hidden_dim),
+#             nn.GELU(),
+#             nn.Dropout(p=dropout),
+#             nn.Linear(hidden_dim,embed_dim)
+#         )
 
-    def forward(self, x, prev_out):
-        #norm and MHA on prev output
-        out = self.layer_norm(prev_out)
-        out, weights = self.self_attn(out, out, out)
-        out = out + prev_out
+#     def forward(self, x, prev_out):
+#         #norm and MHA on prev output
+#         out = self.layer_norm(prev_out)
+#         out, weights = self.self_attn(out, out, out)
+#         out = out + prev_out
         
-        #norm and MHA with encoder and output
-        out_1 = self.layer_norm(out)
-        out_1, weights = self.cross_attn(x, x, out_1)
-        out = out_1 + out
+#         #norm and MHA with encoder and output
+#         out_1 = self.layer_norm(out)
+#         out_1, weights = self.cross_attn(x, x, out_1)
+#         out = out_1 + out
         
-        #ffn
-        output = self.ffn(out) + out
+#         #ffn
+#         output = self.ffn(out) + out
 
-        return output
+#         return output
     
 #task head for each estimated parameter
 class TaskHead(nn.Module):
@@ -75,8 +99,9 @@ class TaskHead(nn.Module):
         super().__init__()
         self.conv = nn.Sequential(
             nn.Conv1d(in_channels=1,out_channels=embed_dim, kernel_size=3, padding=1, padding_mode='circular'),
-            nn.GELU(),
-            nn.Dropout(p=dropout))
+            #nn.GELU(),
+            #nn.Dropout(p=dropout)
+            )
         self.lin_out = nn.Linear(embed_dim*embed_dim,1)
 
     def forward(self, x):
@@ -102,6 +127,8 @@ class IQST(nn.Module):
         self.num_classes = 5
         self.device = device
 
+        self.patch_block = PatchBlock(self.num_patches)
+
         #shared token for classification and regression
         self.class_token = nn.Parameter(torch.randn(1,1,self.embed_dim))
 
@@ -112,7 +139,9 @@ class IQST(nn.Module):
         self.linear_projector = nn.Linear(self.patch_size, self.embed_dim)
 
         #encoder and decoder blocks
-        self.encoder = EncoderBlock(embed_dim=self.embed_dim, hidden_dim=self.hidden_dim, num_heads=self.num_heads, dropout=self.dropout)
+        self.encoder = nn.ModuleList([
+            EncoderBlock(embed_dim=self.embed_dim, hidden_dim=self.hidden_dim, num_heads=self.num_heads, dropout=self.dropout)
+            for i in range(0,self.num_layers)])
         #self.decoder = DecoderBlock(embed_dim=self.embed_dim, hidden_dim=self.hidden_dim, num_heads=self.num_heads, dropout=self.dropout)
 
         #parameter-specific layers
@@ -138,10 +167,13 @@ class IQST(nn.Module):
 
     def forward(self, x):
         #save batch size
-        B = x.shape[0]
+        B = x.shape[0] #x input of B x 2 x 512
 
         #Create image embeddings
-        patches = x.reshape(self.num_patches, B, -1) #num_patches x batch x 2*512/num_patches
+        #patches = split_patches(x, self.num_patches, B, self.device)
+        #patches = x.reshape(self.num_patches, B, -1) #num_patches x batch x 2*512/num_patches
+        patches = self.patch_block(x)
+
         embeddings = self.linear_projector(patches)
 
         #split positional embeddings into patches and project them into embed space
@@ -162,14 +194,14 @@ class IQST(nn.Module):
 
         #put embeddings through encoder
         for i in range(0,self.num_layers):
-            embeddings = self.encoder(embeddings)
+            embeddings = self.encoder[i](embeddings)
 
         #put output embedding and encoded info into decoder
         # for i in range(0,self.num_layers):
         #     out_embed = self.decoder(embeddings, out_embed)
 
         #perform classification with cls token
-        shared_embed = embeddings[0,:,:] #take only cls token out of embeddings
+        shared_embed = torch.mean(embeddings, 0) #take only cls token out of embeddings
         p_type = self.class_MLP(shared_embed)
 
         #Estimate radar params

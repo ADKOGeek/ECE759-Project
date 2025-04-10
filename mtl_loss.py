@@ -10,7 +10,7 @@ import torch
 class MTL_Loss(nn.Module):
     def __init__(self, device):
         super().__init__()
-        self.weights = torch.asarray([1, 0, 0, 0, 0]).to(device) #weights for task (Class, then regression tasks) default: 0.2 each
+        self.weights = torch.asarray([0.2, 0.2, 0.2, 0.2, 0.2]).to(device) #weights for task (Class, then regression tasks) default: 0.2 each
         self.cross_loss = nn.CrossEntropyLoss()
 
 

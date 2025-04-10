@@ -3,6 +3,7 @@
 #########################################################
 
 from matplotlib import pyplot as plt
+import numpy as np
 
 def plot_all(results):
     plt.plot(results[0])
@@ -28,4 +29,8 @@ def plot_all(results):
     plt.xlabel("Epoch")
     plt.ylabel("Accuracy (%)")
     plt.show()
+
+if (__name__=="__main__"):
+    results = np.load('./results_onlyClass_lightIQST.npy')
+    plot_all(results)
     

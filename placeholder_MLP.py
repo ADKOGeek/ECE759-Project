@@ -4,6 +4,24 @@
 
 import torch
 import torch.nn as nn
+#task head for each estimated parameter
+class TaskHead(nn.Module):
+    def __init__(self, embed_dim, dropout):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv1d(in_channels=1,out_channels=embed_dim, kernel_size=3, padding=1, padding_mode='circular'),
+            #nn.GELU(),
+            #nn.Dropout(p=dropout)
+            )
+        self.lin_out = nn.Linear(embed_dim*embed_dim,1)
+
+    def forward(self, x):
+        x = x.unsqueeze(1)
+        x = self.conv(x)
+        x = x.reshape(x.shape[0], -1)
+        x = self.lin_out(x)
+
+        return x
 
 class Placeholder_MLP(nn.Module):
     def __init__(self):
@@ -21,30 +39,12 @@ class Placeholder_MLP(nn.Module):
         #self.output = nn.Linear(64,5)
 
 
-        self.num_pulses = nn.Sequential(
-            nn.Linear(64,32),
-            nn.GELU(),
-            nn.Linear(32,1)
-        )
-        self.pulse_width = nn.Sequential(
-            nn.Linear(64,32),
-            nn.GELU(),
-            nn.Linear(32,1)
-        )
-        self.time_delay = nn.Sequential(
-            nn.Linear(64,32),
-            nn.GELU(),
-            nn.Linear(32,1)
-        )
-        self.repetition_interval = nn.Sequential(
-            nn.Linear(64,32),
-            nn.GELU(),
-            nn.Linear(32,1)
-        )
+        self.num_pulses = TaskHead(64)
+        self.pulse_width = TaskHead(64)
+        self.time_delay = TaskHead(64)
+        self.repetition_interval = TaskHead(64)
         self.classifier = nn.Sequential(
-            nn.Linear(64,32),
-            nn.GELU(),
-            nn.Linear(32,5), #5 classes
+            nn.Linear(64,1), #5 classes
             nn.Softmax(dim=1)
         )
 
