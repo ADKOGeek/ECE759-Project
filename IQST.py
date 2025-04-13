@@ -45,15 +45,25 @@ class EncoderBlock(nn.Module):
     
 #task head for each estimated parameter
 class TaskHead(nn.Module):
-    def __init__(self, embed_dim, dropout):
+    def __init__(self, embed_dim, dropout, out_dim):
         super().__init__()
-        self.conv = nn.Conv1d(in_channels=1,out_channels=embed_dim, kernel_size=3, padding=1, padding_mode='circular')
-        self.lin_out = nn.Linear(embed_dim*embed_dim,1)
+        self.conv = nn.Sequential(
+            nn.Conv1d(in_channels=1,out_channels=embed_dim, kernel_size=3, padding=1, padding_mode='circular'))
+            #nn.GELU(),
+            #nn.Dropout(p=dropout))
+        self.lin_out = nn.Sequential(
+            nn.Linear(embed_dim*embed_dim, out_dim))
+            #nn.GELU(),
+            #nn.Dropout(p=dropout*2))
+        #self.layer_norm_1 = nn.LayerNorm(embed_dim)
+        #self.layer_norm_2 = nn.LayerNorm(embed_dim*embed_dim)
 
     def forward(self, x):
+       #x = self.layer_norm(x)
         x = x.unsqueeze(1)
         x = self.conv(x)
         x = x.reshape(x.shape[0], -1)
+        #self.layer_norm_2(x)
         x = self.lin_out(x)
 
         return x
@@ -90,13 +100,16 @@ class IQST(nn.Module):
             for i in range(0,self.num_layers)])
         #self.decoder = DecoderBlock(embed_dim=self.embed_dim, hidden_dim=self.hidden_dim, num_heads=self.num_heads, dropout=self.dropout)
 
-        #parameter-specific layers
-        self.num_pulses = TaskHead(self.embed_dim, self.dropout)
-        self.pulse_width = TaskHead(self.embed_dim, self.dropout)
-        self.time_delay = TaskHead(self.embed_dim, self.dropout)
-        self.repetition_interval = TaskHead(self.embed_dim, self.dropout)
+        #parameter-specific task heads
+        #self.class_head = TaskHead(self.embed_dim, self.dropout, self.num_classes)
+        self.soft_max = nn.Softmax(dim=1)
+        self.num_pulses = TaskHead(self.embed_dim, self.dropout, 1)
+        self.pulse_width = TaskHead(self.embed_dim, self.dropout, 1)
+        self.time_delay = TaskHead(self.embed_dim, self.dropout, 1)
+        self.repetition_interval = TaskHead(self.embed_dim, self.dropout, 1)
         
-        self.class_MLP = nn.Sequential(
+        
+        self.class_head = nn.Sequential(
             nn.LayerNorm(self.embed_dim),
             nn.Linear(self.embed_dim,self.num_classes),
             nn.Softmax(dim=1))
@@ -118,12 +131,11 @@ class IQST(nn.Module):
         for i in range(0,self.num_layers):
             embeddings = self.encoder[i](embeddings)
 
-        #perform classification with cls token
+        #perform classification
         shared_embed = torch.mean(embeddings, 0) #take only cls token out of embeddings
-        p_type = self.class_MLP(shared_embed)
+        p_type = self.soft_max(self.class_head(shared_embed))
 
         #Estimate radar params
-        #np = self.num_pulses(shared_embed) #should be batch x 1
         np = self.num_pulses(shared_embed)
         pw = self.pulse_width(shared_embed)
         td = self.time_delay(shared_embed)

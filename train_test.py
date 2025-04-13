@@ -94,3 +94,7 @@ def test(model, loss_func, dataloader, device):
     accuracy = correct / total_samples * 100
 
     return test_loss, accuracy
+
+def compute_param_MAE(actual, predicted):
+    param_MAE = torch.mean(torch.abs(actual - predicted), dim=0)
+    return param_MAE

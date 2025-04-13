@@ -37,9 +37,9 @@ optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 #train model
 results = train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, device)
-np.save("./results.npy", results)
+np.save("./results_2.npy", results)
 
-torch.save(model.state_dict(), "./IQST.pth")
+torch.save(model.state_dict(), "./IQST_2.pth")
 
 #get model performance on test set
 test_losses, test_acc = test(model, loss_func, test_loader, device)

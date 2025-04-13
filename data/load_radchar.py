@@ -9,10 +9,11 @@ from torchvision.transforms import ToTensor
 import numpy as np
 
 class RadCharDataset(Dataset):
-    def __init__(self, data, p_type, param_labels):
+    def __init__(self, data, p_type, param_labels, snr):
         self.data = data
         self.p_type = p_type
         self.param_labels = param_labels
+        self.snr = snr
         self.transform = ToTensor
 
     def __len__(self):
@@ -22,7 +23,8 @@ class RadCharDataset(Dataset):
         data = torch.transpose(torch.from_numpy(self.data[index, :, :]).squeeze(dim=0), 0, 1)
         param_labels = torch.from_numpy(self.param_labels[index,:])
         p_type = torch.tensor(self.p_type[index])
-        sample = {'data':data,'rad_params':param_labels,'class_label':p_type}
+        snr = self.snr[index]
+        sample = {'data':data,'rad_params':param_labels,'class_label':p_type, 'snr':snr}
 
         return sample
     
@@ -53,6 +55,7 @@ def load_data(batch_size):
         pulse_width = loaded_h5_labels[:,3].astype(np.float32)
         time_delay = loaded_h5_labels[:,4].astype(np.float32)
         pulse_repetition = loaded_h5_labels[:,5].astype(np.float32)
+        snr = loaded_h5_labels[:,6].astype(np.int32)
 
         #normalize params between 0 and 1
         num_pulses = np.expand_dims(((num_pulses - np.min(num_pulses)) / (np.max(num_pulses) - np.min(num_pulses))), 1)
@@ -64,7 +67,7 @@ def load_data(batch_size):
         param_labels = np.concatenate([num_pulses, pulse_width, time_delay, pulse_repetition], 1)
 
         #put dataset into data loaders
-        dataset = RadCharDataset(data_normed, p_type, param_labels)
+        dataset = RadCharDataset(data_normed, p_type, param_labels, snr)
         train_set, val_set, test_set = torch.utils.data.random_split(dataset, [0.7, 0.15, 0.15])
         train_loader = DataLoader(train_set, shuffle=True, batch_size=batch_size, num_workers=0) #set num_workers to 64 for cloud resource
         val_loader = DataLoader(val_set, shuffle=True, batch_size=batch_size, num_workers=0)

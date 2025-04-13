@@ -1,34 +1,67 @@
 from matplotlib import pyplot as plt
 from data.load_radchar import load_data
+from IQST import IQST
+import torch
+
+def label_to_string(class_label):
+    p_type = ""
+    if (class_label == 0):
+        p_type = "Coherent Pulse Train"
+    elif (class_label == 1):
+        p_type = "Barker Code"
+    elif (class_label == 2):
+        p_type = "Polyphase Barker Code"
+    elif (class_label == 3):
+        p_type = "Frank Code"
+    elif (class_label == 4):
+        p_type = "Linear Frequency Modulated"
+    else:
+        p_type = "This is not a class"
+
+    return p_type
 
 
+
+
+
+#set device for torch to use (doesn't actually do anything right now lol)
+device = (
+    torch.device("cpu") if not torch.cuda.is_available() else torch.device("cuda:0")
+)
+print("Using device", device)
+
+#load data sample
 train_loader, val_loader, test_loader = load_data(batch_size=1)
-
-dataiter = iter(train_loader)
+dataiter = iter(test_loader)
 sample = next(dataiter)
-signal = sample['data'].squeeze(0).detach().cpu()
-rad_params = sample['rad_params']
+signal = sample['data']
+rad_params = sample['rad_params'].squeeze().detach().cpu()
 class_label = sample['class_label'].squeeze().detach().cpu()
-print(f"Class label: {class_label}")
+p_type = label_to_string(class_label)
 
-p_type = ""
-if (class_label == 0):
-    p_type = "Coherent Pulse Train"
-elif (class_label == 1):
-    p_type = "Barker Code"
-elif (class_label == 2):
-    p_type = "Polyphase Barker Code"
-elif (class_label == 3):
-    p_type = "Frank Code"
-elif (class_label == 4):
-    p_type = "Linear Frequency Modulated"
-else:
-    p_type = "This is not a class"
+#make prediction on batch
+model = IQST(device).to(device)
+model.load_state_dict(torch.load('./IQST_3.pth', map_location=torch.device('cpu'))) #load model from pth file
+model.eval()
+class_pred, param_pred = model(signal)
 
+pred_label = torch.argmax(class_pred) #get class index prediction
+pred_ptype = label_to_string(pred_label)
+pred_params = param_pred.squeeze().detach().cpu() #get predicted radar params
+
+#get signal off of gpu and into a tensor that can be graphed
+signal = signal.squeeze(0).detach().cpu()
+
+#plot signal
 fig, ax = plt.subplots(1,2)
 ax[0].plot(signal[0,:])
 ax[0].set_title("I Component")
 ax[1].plot(signal[1,:])
 ax[1].set_title("Q Component")
-fig.suptitle(f"Plot of class: {p_type}")
+fig.suptitle(f"Actual signal type: {p_type}, Predicted signal type:{pred_ptype}")
 plt.show()
+
+#print true vs predicted radar parameters
+print(f"True params: # pulses-{rad_params[0]}, pulse width-{rad_params[1]}, time delay-{rad_params[2]}, pulse repetition interval-{rad_params[3]}")
+print(f"Predicted params: # pulses-{pred_params[0]}, pulse width-{pred_params[1]}, time delay-{pred_params[2]}, pulse repetition interval-{pred_params[3]}")
+
