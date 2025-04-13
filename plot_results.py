@@ -29,6 +29,6 @@ if (__name__=="__main__"):
         'weight' : 'bold',
         'size'   : 40}
     matplotlib.rc('font', **font)
-    results = np.load('./results_IQST_SmallData.npy')
+    results = np.load('./results_CNN.npy')
     plot_all(results)
     

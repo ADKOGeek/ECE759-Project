@@ -1,6 +1,8 @@
 from matplotlib import pyplot as plt
+import matplotlib
 from data.load_radchar import load_data
 from IQST import IQST
+from CNN import CNN_model
 import torch
 from tqdm import tqdm
 import numpy as np
@@ -11,6 +13,11 @@ device = (
 )
 print("Using device", device)
 
+#set font
+font = {'weight' : 'bold',
+        'size'   : 40}
+matplotlib.rc('font', **font)
+
 #load data sample
 train_loader, val_loader, test_loader = load_data(batch_size=1)
 
@@ -18,8 +25,8 @@ train_loader, val_loader, test_loader = load_data(batch_size=1)
 model0 = IQST(device).to(device)
 model0.load_state_dict(torch.load('./IQST_SmallData.pth', map_location=torch.device('cpu'))) #load model from pth file
 model0.eval()
-model1 = IQST(device).to(device)
-model1.load_state_dict(torch.load('./IQST_3.pth', map_location=torch.device('cpu')))
+model1 = CNN_model().to(device)
+model1.load_state_dict(torch.load('./CNN_1.pth', map_location=torch.device('cpu')))
 model1.eval()
 models = [model0, model1]
 
@@ -72,7 +79,7 @@ for j in range(0,2):
     accuracy[j] = correct / total_samples * 100
 
 MAE = (absolute_error / count).squeeze()
-MAE_snr = torch.div(absolute_error_snr, absolute_error_snr_counts).detach().cpu() #element-wise division
+MAE_snr = (torch.div(absolute_error_snr, absolute_error_snr_counts)*64).detach().cpu() #element-wise division
 accuracy_snr = (torch.div(accuracy_snr, accuracy_snr_counts) * 100).squeeze(0).detach().cpu()
 x_axis = np.squeeze((np.indices((1,41))[1] - 20), 0)
 #plot MAE vs SNR

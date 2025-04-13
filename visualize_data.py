@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+import matplotlib
 from data.load_radchar import load_data
 from IQST import IQST
 import torch
@@ -30,6 +31,10 @@ device = (
 )
 print("Using device", device)
 
+font = {'weight' : 'bold',
+        'size'   : 40}
+matplotlib.rc('font', **font)
+
 #load data sample
 train_loader, val_loader, test_loader = load_data(batch_size=1)
 dataiter = iter(test_loader)
@@ -41,7 +46,7 @@ p_type = label_to_string(class_label)
 
 #make prediction on batch
 model = IQST(device).to(device)
-model.load_state_dict(torch.load('./IQST_3.pth', map_location=torch.device('cpu'))) #load model from pth file
+model.load_state_dict(torch.load('./IQST_SmallData.pth', map_location=torch.device('cpu'))) #load model from pth file
 model.eval()
 class_pred, param_pred = model(signal)
 
@@ -56,12 +61,16 @@ signal = signal.squeeze(0).detach().cpu()
 fig, ax = plt.subplots(1,2)
 ax[0].plot(signal[0,:])
 ax[0].set_title("I Component")
+ax[0].set_xlabel("Time")
+ax[0].set_ylabel("Amplitude")
 ax[1].plot(signal[1,:])
 ax[1].set_title("Q Component")
-fig.suptitle(f"Actual signal type: {p_type}, Predicted signal type:{pred_ptype}")
+ax[1].set_xlabel("Time")
+ax[1].set_ylabel("Amplitude")
+fig.suptitle(f"Actual signal type: {p_type}, Predicted signal type: {pred_ptype}")
 plt.show()
 
 #print true vs predicted radar parameters
-print(f"True params: # pulses-{rad_params[0]}, pulse width-{rad_params[1]}, time delay-{rad_params[2]}, pulse repetition interval-{rad_params[3]}")
-print(f"Predicted params: # pulses-{pred_params[0]}, pulse width-{pred_params[1]}, time delay-{pred_params[2]}, pulse repetition interval-{pred_params[3]}")
+print(f"Normalized true params: np-{rad_params[0]}, pw-{rad_params[1]}, td-{rad_params[2]}, pri-{rad_params[3]}")
+print(f"Normalized predicted params: np-{pred_params[0]}, pw-{pred_params[1]}, td-{pred_params[2]}, pri-{pred_params[3]}")
 
