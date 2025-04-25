@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 import matplotlib
 from data.load_radchar import load_data
-from IQST import IQST
-from CNN import CNN_model
+from models.IQST import IQST
+from models.CNN import CNN_model
 import torch
 from tqdm import tqdm
 import numpy as np
@@ -23,10 +23,10 @@ train_loader, val_loader, test_loader = load_data(batch_size=1)
 
 #load models
 model0 = IQST(device).to(device)
-model0.load_state_dict(torch.load('./IQST_SmallData.pth', map_location=torch.device('cpu'))) #load model from pth file
+model0.load_state_dict(torch.load('./checkpoints/IQST_SmallData.pth', map_location=torch.device('cpu'))) #load model from pth file
 model0.eval()
 model1 = CNN_model().to(device)
-model1.load_state_dict(torch.load('./CNN_1.pth', map_location=torch.device('cpu')))
+model1.load_state_dict(torch.load('./checkpoints/CNN_1.pth', map_location=torch.device('cpu')))
 model1.eval()
 models = [model0, model1]
 

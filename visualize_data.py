@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import matplotlib
 from data.load_radchar import load_data
-from IQST import IQST
+from models.IQST import IQST
 import torch
 
 def label_to_string(class_label):
@@ -46,7 +46,7 @@ p_type = label_to_string(class_label)
 
 #make prediction on batch
 model = IQST(device).to(device)
-model.load_state_dict(torch.load('./IQST_SmallData.pth', map_location=torch.device('cpu'))) #load model from pth file
+model.load_state_dict(torch.load('./checkpoints/IQST_SmallData.pth', map_location=torch.device('cpu'))) #load model from pth file
 model.eval()
 class_pred, param_pred = model(signal)
 

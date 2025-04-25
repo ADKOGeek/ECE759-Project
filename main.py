@@ -3,10 +3,10 @@
 #############################################
 
 from data.load_radchar import load_data
-from placeholder_MLP import Placeholder_MLP
-from IQST import IQST
-from mtl_loss import MTL_Loss
-from train_test import train, test
+from models.placeholder_MLP import Placeholder_MLP
+from models.IQST import IQST
+from training_testing.mtl_loss import MTL_Loss
+from training_testing.train_test import train, test
 from plot_results import plot_all
 import torch
 import numpy as np
@@ -37,9 +37,9 @@ optimizer = torch.optim.Adam(params=model.parameters(), lr=learning_rate)
 
 #train model
 results = train(num_epochs, model, loss_func, optimizer, train_loader, val_loader, device)
-np.save("./results_2.npy", results)
+np.save("./results/results_2.npy", results)
 
-torch.save(model.state_dict(), "./IQST_2.pth")
+torch.save(model.state_dict(), "./checkpoints/IQST_2.pth")
 
 #get model performance on test set
 test_losses, test_acc = test(model, loss_func, test_loader, device)
